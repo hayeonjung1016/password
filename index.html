@@ -58,13 +58,6 @@ button {
 img {
     margin: 20px 0;
 }
-
-/* ⭐ input 추가 */
-input {
-    font-size: 18px;
-    padding: 8px;
-    text-align: center;
-}
 </style>
 </head>
 
@@ -83,9 +76,6 @@ input {
       <div class="box" id="b3"></div>
     </div>
 
-    <!-- ⭐ 추가 -->
-    <input type="tel" id="input1" maxlength="4">
-
     <button id="nextBtn" onclick="startGame()" style="display:none;">enter</button>
 </div>
 
@@ -101,16 +91,13 @@ input {
       <div class="box" id="g3"></div>
     </div>
 
-    <!-- ⭐ 추가 -->
-    <input type="tel" id="input2" maxlength="4">
-
     <p id="message"></p>
     <p id="attempts"></p>
 </div>
 
 <!-- 🎉 결과 화면 -->
 <div id="result">
-    <img src="thanks.png" width="200">
+    <img src="thank.png" width="200">
     <h2>Thank you</h2>
 </div>
 
@@ -120,28 +107,40 @@ input {
 // -------- 첫 화면 --------
 let firstInput = "";
 
-// ⭐ 모바일 입력 대응
-document.getElementById("input1").addEventListener("input", function() {
-    firstInput = this.value;
+document.addEventListener("keydown", function(e) {
 
-    updateBoxes();
+    if (document.getElementById("screen1").style.display !== "none") {
 
-    document.getElementById("nextBtn").style.display =
-        firstInput.length === 4 ? "block" : "none";
+        if (e.key >= "0" && e.key <= "9") {
+            if (firstInput.length < 4) {
+                firstInput += e.key;
+                updateBoxes();
+            }
+        }
+
+        if (e.key === "Backspace") {
+            firstInput = firstInput.slice(0, -1);
+            updateBoxes();
+        }
+
+    } else if (document.getElementById("screen2").style.display !== "none") {
+        handleGameInput(e);
+    }
 });
 
 function updateBoxes() {
     for (let i = 0; i < 4; i++) {
         document.getElementById("b" + i).textContent = firstInput[i] || "";
     }
+
+    document.getElementById("nextBtn").style.display =
+        firstInput.length === 4 ? "block" : "none";
 }
 
 // -------- 게임 시작 --------
 let ANSWER = "";
 
 function startGame() {
-    if (firstInput.length !== 4) return;
-
     ANSWER = firstInput;
 
     document.getElementById("screen1").style.display = "none";
@@ -149,24 +148,38 @@ function startGame() {
 }
 
 // -------- 게임 --------
+let currentInput = "";
 let count = 0;
 
-document.getElementById("input2").addEventListener("input", function() {
-    let v = this.value;
+function handleGameInput(e) {
 
+    if (e.key >= "0" && e.key <= "9") {
+        if (currentInput.length < 4) {
+            currentInput += e.key;
+            updateGameBoxes();
+        }
+    }
+
+    if (e.key === "Backspace") {
+        currentInput = currentInput.slice(0, -1);
+        updateGameBoxes();
+    }
+
+    if (e.key === "Enter") {
+        checkGuess();
+    }
+}
+
+function updateGameBoxes() {
     for (let i = 0; i < 4; i++) {
-        document.getElementById("g" + i).textContent = v[i] || "";
+        document.getElementById("g" + i).textContent = currentInput[i] || "";
     }
-
-    if (v.length === 4) {
-        checkGuess(v);
-        this.value = "";
-    }
-});
+}
 
 // 색 효과
 function flashColor(color) {
     const original = "#ffffff";
+
     document.body.style.background = color;
 
     setTimeout(() => {
@@ -175,10 +188,15 @@ function flashColor(color) {
 }
 
 // 정답 체크
-function checkGuess(currentInput) {
+function checkGuess() {
     let message = document.getElementById("message");
     let attempts = document.getElementById("attempts");
     let img = document.getElementById("lockImage");
+
+    if (currentInput.length !== 4) {
+        message.textContent = "write 4 digit-number";
+        return;
+    }
 
     count++;
 
@@ -187,6 +205,7 @@ function checkGuess(currentInput) {
         img.src = "unlock.png";
         flashColor("#7CFC00");
 
+        // 🎉 결과 화면 전환
         setTimeout(() => {
             document.getElementById("screen2").style.display = "none";
             document.getElementById("result").style.display = "flex";
@@ -202,8 +221,11 @@ function checkGuess(currentInput) {
     }
 
     attempts.textContent = "try: " + count;
+
+    currentInput = "";
+    updateGameBoxes();
 }
 </script>
 
 </body>
-</html>
+</html>             
